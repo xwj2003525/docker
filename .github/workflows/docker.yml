@@ -1,7 +1,8 @@
-name: Mirror Plane Image
+name: Mirror Plane Images
 
 on:
   workflow_dispatch:
+
 
 jobs:
 
@@ -10,8 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      packages: write
       contents: read
+      packages: write
+
 
     steps:
 
@@ -23,19 +25,48 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
 
-    - name: Pull Plane image
+    - name: Mirror images
       run: |
-        docker pull makeplane/plane-backend:stable
+
+        images="
+        makeplane/plane-backend:latest
+        makeplane/plane-frontend:latest
+        makeplane/plane-admin:latest
+        makeplane/plane-live:latest
+        makeplane/plane-space:latest
+        makeplane/plane-worker:latest
+        makeplane/plane-proxy:latest
+        postgres:15
+        redis:7
+        minio/minio:latest
+        "
 
 
-    - name: Tag image
-      run: |
-        docker tag \
-        makeplane/plane-backend:stable \
-        ghcr.io/${{ github.repository_owner }}/plane-backend:stable
+        for image in $images
+        do
+
+          echo "===================="
+          echo "Pull $image"
+          echo "===================="
+
+          docker pull $image
 
 
-    - name: Push image
-      run: |
-        docker push \
-        ghcr.io/${{ github.repository_owner }}/plane-backend:stable
+          new_name=$(echo $image | \
+          sed 's/\//-/g' | \
+          sed 's/:/-/g')
+
+
+          echo "Push ghcr.io/${{ github.repository_owner }}/$new_name"
+
+
+          docker tag \
+          $image \
+          ghcr.io/${{ github.repository_owner }}/$new_name
+
+
+          docker push \
+          ghcr.io/${{ github.repository_owner }}/$new_name
+
+
+        done
