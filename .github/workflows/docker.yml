@@ -1,58 +1,90 @@
-- name: Mirror
-  run: |
+name: Mirror Plane Image
 
-    case "${{ github.event.inputs.image }}" in
+on:
+  workflow_dispatch:
+    inputs:
 
-    plane-live)
-      IMAGE=makeplane/plane-live:latest
-      NAME=plane-live
-      ;;
-
-    plane-backend)
-      IMAGE=makeplane/plane-backend:latest
-      NAME=plane-backend
-      ;;
-
-    plane-worker)
-      IMAGE=makeplane/plane-worker:latest
-      NAME=plane-worker
-      ;;
-
-    plane-space)
-      IMAGE=makeplane/plane-space:latest
-      NAME=plane-space
-      ;;
-
-    plane-web)
-      IMAGE=makeplane/plane-web:latest
-      NAME=plane-web
-      ;;
-
-    plane-admin)
-      IMAGE=makeplane/plane-admin:latest
-      NAME=plane-admin
-      ;;
-
-    plane-proxy)
-      IMAGE=makeplane/plane-proxy:latest
-      NAME=plane-proxy
-      ;;
-
-    *)
-      echo "unknown image"
-      exit 1
-      ;;
-
-    esac
+      image:
+        description: "image name"
+        required: true
+        default: "plane-live"
 
 
-    docker pull $IMAGE
+jobs:
+
+  mirror:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
 
 
-    docker tag \
-    $IMAGE \
-    ghcr.io/${{ github.repository_owner }}/$NAME:latest
+    steps:
+
+    - name: Login GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
 
-    docker push \
-    ghcr.io/${{ github.repository_owner }}/$NAME:latest
+    - name: Mirror
+      run: |
+    
+        case "${{ github.event.inputs.image }}" in
+    
+        plane-live)
+          IMAGE=makeplane/plane-live:latest
+          NAME=plane-live
+          ;;
+    
+        plane-backend)
+          IMAGE=makeplane/plane-backend:latest
+          NAME=plane-backend
+          ;;
+    
+        plane-worker)
+          IMAGE=makeplane/plane-worker:latest
+          NAME=plane-worker
+          ;;
+    
+        plane-space)
+          IMAGE=makeplane/plane-space:latest
+          NAME=plane-space
+          ;;
+    
+        plane-web)
+          IMAGE=makeplane/plane-web:latest
+          NAME=plane-web
+          ;;
+    
+        plane-admin)
+          IMAGE=makeplane/plane-admin:latest
+          NAME=plane-admin
+          ;;
+    
+        plane-proxy)
+          IMAGE=makeplane/plane-proxy:latest
+          NAME=plane-proxy
+          ;;
+    
+        *)
+          echo "unknown image"
+          exit 1
+          ;;
+    
+        esac
+    
+    
+        docker pull $IMAGE
+    
+    
+        docker tag \
+        $IMAGE \
+        ghcr.io/${{ github.repository_owner }}/$NAME:latest
+    
+    
+        docker push \
+        ghcr.io/${{ github.repository_owner }}/$NAME:latest
