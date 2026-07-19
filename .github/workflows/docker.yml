@@ -9,6 +9,7 @@ on:
 
 jobs:
 
+
   mirror:
 
 
@@ -26,66 +27,210 @@ jobs:
     steps:
 
 
-    - name: Login GHCR
-
-      uses: docker/login-action@v3
-
-      with:
-
-        registry: ghcr.io
-
-        username: ${{ github.actor }}
-
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login GHCR
 
 
-
-    - name: Mirror Plane Images
-
-      run: |
+        uses: docker/login-action@v3
 
 
-        images=$(cat <<EOF
+        with:
 
-        plane-live makeplane/plane-live:latest
 
-        plane-backend makeplane/plane-backend:latest
+          registry: ghcr.io
 
-        plane-worker makeplane/plane-backend:latest
 
-        plane-space makeplane/plane-space:latest
+          username: ${{ github.actor }}
 
-        plane-web makeplane/plane-web:latest
 
-        plane-admin makeplane/plane-admin:latest
-
-        EOF
-
-        )
+          password: ${{ secrets.GITHUB_TOKEN }}
 
 
 
-        while read NAME IMAGE
 
-        do
-
-          echo "Pulling $IMAGE"
+      - name: Mirror Images
 
 
-          docker pull $IMAGE
+        shell: bash
 
 
-          docker tag \
-
-          $IMAGE \
-
-          ghcr.io/${{ github.repository_owner }}/$NAME:latest
+        run: |
 
 
-
-          docker push \
-
-          ghcr.io/${{ github.repository_owner }}/$NAME:latest
+          FAILED=""
 
 
-        done <<< "$images"
+          mirror() {
+
+
+            TARGET=$1
+
+            SOURCE=$2
+
+
+
+            echo ""
+
+            echo "================================"
+
+            echo "SOURCE: $SOURCE"
+
+            echo "TARGET: ghcr.io/${{ github.repository_owner }}/$TARGET:latest"
+
+            echo "================================"
+
+
+
+
+            docker pull "$SOURCE"
+
+
+            if [ $? -ne 0 ]; then
+
+
+              echo "FAILED pull $SOURCE"
+
+              FAILED="$FAILED $SOURCE"
+
+              return 0
+
+
+            fi
+
+
+
+
+
+            docker tag \
+
+              "$SOURCE" \
+
+              "ghcr.io/${{ github.repository_owner }}/$TARGET:latest"
+
+
+
+            if [ $? -ne 0 ]; then
+
+
+              echo "FAILED tag $SOURCE"
+
+              FAILED="$FAILED $SOURCE"
+
+              return 0
+
+
+            fi
+
+
+
+
+
+            docker push \
+
+              "ghcr.io/${{ github.repository_owner }}/$TARGET:latest"
+
+
+
+            if [ $? -ne 0 ]; then
+
+
+              echo "FAILED push $TARGET"
+
+              FAILED="$FAILED $SOURCE"
+
+              return 0
+
+
+            fi
+
+
+
+
+            echo "SUCCESS $TARGET"
+
+
+          }
+
+
+
+
+
+          mirror \
+
+            plane-web \
+
+            makeplane/plane-frontend:latest
+
+
+
+
+          mirror \
+
+            plane-admin \
+
+            makeplane/plane-admin:latest
+
+
+
+
+          mirror \
+
+            plane-backend \
+
+            makeplane/plane-backend:latest
+
+
+
+
+          mirror \
+
+            plane-worker \
+
+            makeplane/plane-backend:latest
+
+
+
+
+          mirror \
+
+            plane-live \
+
+            makeplane/plane-live:latest
+
+
+
+
+          mirror \
+
+            plane-space \
+
+            makeplane/plane-space:latest
+
+
+
+
+
+          echo ""
+
+          echo "================================"
+
+          echo "RESULT"
+
+          echo "================================"
+
+
+
+          if [ -n "$FAILED" ]; then
+
+
+            echo "Failed images:"
+
+            echo "$FAILED"
+
+
+          else
+
+
+            echo "All images mirrored successfully"
+
+
+          fi
