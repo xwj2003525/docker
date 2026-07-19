@@ -51,6 +51,18 @@ jobs:
           IMAGE=makeplane/plane-space:latest
           ;;
 
+        plane-web)
+         IMAGE=makeplane/plane-web:latest
+         ;;
+
+        plane-admin)
+         IMAGE=makeplane/plane-admin:latest
+         ;;
+
+        plane-proxy)
+         IMAGE=makeplane/plane-proxy:latest
+         ;;
+
         *)
           echo "unknown image"
           exit 1
