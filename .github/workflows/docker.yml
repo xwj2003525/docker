@@ -1,86 +1,58 @@
-name: Mirror Plane Image
+- name: Mirror
+  run: |
 
-on:
-  workflow_dispatch:
-    inputs:
+    case "${{ github.event.inputs.image }}" in
 
-      image:
-        description: "image name"
-        required: true
-        default: "plane-live"
+    plane-live)
+      IMAGE=makeplane/plane-live:latest
+      NAME=plane-live
+      ;;
 
+    plane-backend)
+      IMAGE=makeplane/plane-backend:latest
+      NAME=plane-backend
+      ;;
 
-jobs:
+    plane-worker)
+      IMAGE=makeplane/plane-worker:latest
+      NAME=plane-worker
+      ;;
 
-  mirror:
+    plane-space)
+      IMAGE=makeplane/plane-space:latest
+      NAME=plane-space
+      ;;
 
-    runs-on: ubuntu-latest
+    plane-web)
+      IMAGE=makeplane/plane-web:latest
+      NAME=plane-web
+      ;;
 
-    permissions:
-      packages: write
+    plane-admin)
+      IMAGE=makeplane/plane-admin:latest
+      NAME=plane-admin
+      ;;
 
+    plane-proxy)
+      IMAGE=makeplane/plane-proxy:latest
+      NAME=plane-proxy
+      ;;
 
-    steps:
+    *)
+      echo "unknown image"
+      exit 1
+      ;;
 
-    - name: Login GHCR
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-
-    - name: Mirror
-      run: |
-
-        case "${{ github.event.inputs.image }}" in
-
-        plane-live)
-          IMAGE=makeplane/plane-live:latest
-          ;;
-
-        plane-backend)
-          IMAGE=makeplane/plane-backend:latest
-          ;;
-
-        plane-worker)
-          IMAGE=makeplane/plane-worker:latest
-          ;;
-
-        plane-space)
-          IMAGE=makeplane/plane-space:latest
-          ;;
-
-        plane-web)
-         IMAGE=makeplane/plane-web:latest
-         ;;
-
-        plane-admin)
-         IMAGE=makeplane/plane-admin:latest
-         ;;
-
-        plane-proxy)
-         IMAGE=makeplane/plane-proxy:latest
-         ;;
-
-        *)
-          echo "unknown image"
-          exit 1
-          ;;
-
-        esac
+    esac
 
 
-        docker pull $IMAGE
+    docker pull $IMAGE
 
 
-        NAME=$(echo $IMAGE | sed 's/\//-/g' | sed 's/:/-/g')
+    docker tag \
+    $IMAGE \
+    ghcr.io/${{ github.repository_owner }}/$NAME:latest
 
 
-        docker tag \
-        $IMAGE \
-        ghcr.io/${{ github.repository_owner }}/$NAME
-
-
-        docker push \
-        ghcr.io/${{ github.repository_owner }}/$NAME
+    docker push \
+    ghcr.io/${{ github.repository_owner }}/$NAME:latest
