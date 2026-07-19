@@ -31,11 +31,11 @@ jobs:
     - name: Tag image
       run: |
         docker tag \
-        makeplane/plane-server:latest \
-        ghcr.io/${{ github.repository_owner }}/plane-server:latest
+        makeplane/plane-backend:stable \
+        ghcr.io/${{ github.repository_owner }}/plane-backend:stable
 
 
     - name: Push image
       run: |
         docker push \
-        ghcr.io/${{ github.repository_owner }}/plane-server:latest
+        ghcr.io/${{ github.repository_owner }}/plane-backend:stable
