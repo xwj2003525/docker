@@ -1,7 +1,13 @@
-name: Mirror Plane Images
+name: Mirror Plane Image
 
 on:
   workflow_dispatch:
+    inputs:
+
+      image:
+        description: "image name"
+        required: true
+        default: "plane-live"
 
 
 jobs:
@@ -11,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
       packages: write
 
 
@@ -25,48 +30,45 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
 
-    - name: Mirror images
+    - name: Mirror
       run: |
 
-        images="
-        makeplane/plane-backend:latest
-        makeplane/plane-frontend:latest
-        makeplane/plane-admin:latest
-        makeplane/plane-live:latest
-        makeplane/plane-space:latest
-        makeplane/plane-worker:latest
-        makeplane/plane-proxy:latest
-        postgres:15
-        redis:7
-        minio/minio:latest
-        "
+        case "${{ github.event.inputs.image }}" in
+
+        plane-live)
+          IMAGE=makeplane/plane-live:latest
+          ;;
+
+        plane-backend)
+          IMAGE=makeplane/plane-backend:latest
+          ;;
+
+        plane-worker)
+          IMAGE=makeplane/plane-worker:latest
+          ;;
+
+        plane-space)
+          IMAGE=makeplane/plane-space:latest
+          ;;
+
+        *)
+          echo "unknown image"
+          exit 1
+          ;;
+
+        esac
 
 
-        for image in $images
-        do
-
-          echo "===================="
-          echo "Pull $image"
-          echo "===================="
-
-          docker pull $image
+        docker pull $IMAGE
 
 
-          new_name=$(echo $image | \
-          sed 's/\//-/g' | \
-          sed 's/:/-/g')
+        NAME=$(echo $IMAGE | sed 's/\//-/g' | sed 's/:/-/g')
 
 
-          echo "Push ghcr.io/${{ github.repository_owner }}/$new_name"
+        docker tag \
+        $IMAGE \
+        ghcr.io/${{ github.repository_owner }}/$NAME
 
 
-          docker tag \
-          $image \
-          ghcr.io/${{ github.repository_owner }}/$new_name
-
-
-          docker push \
-          ghcr.io/${{ github.repository_owner }}/$new_name
-
-
-        done
+        docker push \
+        ghcr.io/${{ github.repository_owner }}/$NAME
