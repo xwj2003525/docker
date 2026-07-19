@@ -1,25 +1,19 @@
-name: Build Docker Image
+name: Mirror Plane Image
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
 
-  docker-build:
+  mirror:
 
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
       packages: write
+      contents: read
 
     steps:
-
-    - name: Checkout code
-      uses: actions/checkout@v4
-
 
     - name: Login GHCR
       uses: docker/login-action@v3
@@ -29,10 +23,19 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
 
-    - name: Build and Push
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        push: true
-        tags: |
-          ghcr.io/${{ github.repository_owner }}/docker-test:latest
+    - name: Pull Plane image
+      run: |
+        docker pull makeplane/plane-server:latest
+
+
+    - name: Tag image
+      run: |
+        docker tag \
+        makeplane/plane-server:latest \
+        ghcr.io/${{ github.repository_owner }}/plane-server:latest
+
+
+    - name: Push image
+      run: |
+        docker push \
+        ghcr.io/${{ github.repository_owner }}/plane-server:latest
