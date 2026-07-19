@@ -25,7 +25,7 @@ jobs:
 
     - name: Pull Plane image
       run: |
-        docker pull makeplane/plane-server:latest
+        docker pull ghcr.io/makeplane/plane-backend:latest
 
 
     - name: Tag image
